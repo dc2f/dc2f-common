@@ -66,12 +66,26 @@ fun RenderContext<LandingPage>.landingPage() {
 
                 is LandingPageElement.Hero -> {
                     // DIFF added a useless div here, for minimizing diffs
-                    section("landing-hero-element section") {
-                        div("") {
+                    section("landing-hero-element section hero") {
+                        when(child.colorTheme) {
+                            ColorTheme.Primary -> classes = classes + "is-primary" + "is-bold"
+                            ColorTheme.Default -> {}
+                        }
+                        div("hero-content") {
                             div("container") {
                                 div("columns is-vcentered") {
-                                    if (child.leftAlign) {
+                                    if (!child.textInLeftColumn) {
                                         classes = classes + "columns-reversed"
+                                    }
+                                    div("column content") {
+                                        if (child.bodyTextAlign == TextAlign.Center) {
+                                            classes = classes + "has-text-centered"
+                                        }
+                                        h2("title is-size-1") { +child.title }
+                                        markdown(context, child.body)
+//                                        unsafe {
+//                                            +child.body.toString()
+//                                        }
                                     }
                                     div("column is-7") {
                                         // TODO add image resizing/optimization stuff
@@ -94,16 +108,6 @@ fun RenderContext<LandingPage>.landingPage() {
                                                 }
                                             }
                                         }
-                                    }
-                                    div("column content") {
-                                        if (child.bodyTextAlign == TextAlign.Center) {
-                                            classes = classes + "has-text-centered"
-                                        }
-                                        h3 { +child.title }
-                                        markdown(context, child.body)
-//                                        unsafe {
-//                                            +child.body.toString()
-//                                        }
                                     }
                                 }
                             }
@@ -174,6 +178,10 @@ fun RenderContext<LandingPage>.landingPage() {
                             richText(context, child.body)
                         }
                     }
+                is LandingPageElement.RawContent ->
+//                    section("section") {
+                        richText(context, child.body)
+//                    }
 
                 else ->
                     unsafe { raw(renderNode(child)) }

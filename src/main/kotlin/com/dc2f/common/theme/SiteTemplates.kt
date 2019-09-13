@@ -238,6 +238,8 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
 //        httpEquiv = "encoding"
 //    }
 
+    website.headInject?.let { headInject -> unsafe { raw(headInject) } }
+
 }
 
 private fun MenuEntry.href(context: RenderContext<*>): String? =
@@ -265,14 +267,14 @@ fun BODY.siteFooter(context: RenderContext<*>) {
                 }
 
 
-                div("column content has-text-right") {
-                    p {
-                        unsafe { +"""<strong>ANLAGE.APP</strong> by <a href="https://codeux.design/" target="_blank">codeux.design</a> and Herbert Poul""" }
-                    }
-                    p {
-                        unsafe { +"""Questions? Suggestions? <a href="mailto:hello@anlage.app">hello@anlage.app</a>""" }
-                    }
-                }
+//                div("column content has-text-right") {
+//                    p {
+//                        unsafe { +"""<strong>ANLAGE.APP</strong> by <a href="https://codeux.design/" target="_blank">codeux.design</a> and Herbert Poul""" }
+//                    }
+//                    p {
+//                        unsafe { +"""Questions? Suggestions? <a href="mailto:hello@anlage.app">hello@anlage.app</a>""" }
+//                    }
+//                }
 
             }
 

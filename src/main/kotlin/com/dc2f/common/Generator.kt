@@ -110,10 +110,10 @@ data class Dc2fConfig<ROOT_CONTENT : com.dc2f.Website<*>>(
 
 
 class GeneratorCommand<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONTENT>) :
-    CliktCommand() {
+    CliktCommand(name = "dc2f") {
 
     init {
-        subcommands(Serve(config))
+        subcommands(Serve(config), Build(config))
     }
 
     override fun run() {

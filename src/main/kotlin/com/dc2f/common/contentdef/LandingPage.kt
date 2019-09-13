@@ -18,7 +18,14 @@ enum class TextAlign {
     ;
 }
 
-open class LandingPageElement : ContentDef {
+enum class ColorTheme {
+    Default,
+    Primary,
+}
+
+abstract class LandingPageElement : ContentDef {
+    abstract val embed: Embeddables?
+
     @Nestable("intro")
     abstract class Intro : LandingPageElement() {
         abstract val teaser: String
@@ -27,24 +34,18 @@ open class LandingPageElement : ContentDef {
     }
     @Nestable("hero")
     abstract class Hero : LandingPageElement() {
+        open var colorTheme = ColorTheme.Default
         abstract val title: String
         @set:JacksonInject("body")
         abstract var body: Markdown
-        var bodyTextAlign : TextAlign =
-            TextAlign.Center
+        open var bodyTextAlign : TextAlign = TextAlign.Center
         abstract val screenshot: ImageAsset
-        abstract val leftAlign: Boolean
+        abstract val textInLeftColumn: Boolean
     }
     @Nestable("start")
     abstract class Start : LandingPageElement() {
         abstract val title: String
         abstract val subTitle: String
-    }
-    @Nestable("cpctry")
-    abstract class CpcTry : Start() {
-        var offerCoupon = "EARLYADOPTER90"
-        var offerTitle = "Limited time offer!"
-        var offerSubTitle = Markdown("Early Adopter price, 90% Off! Forever!")
     }
     @Nestable("notready")
     abstract class NotReady : LandingPageElement()
@@ -54,13 +55,17 @@ open class LandingPageElement : ContentDef {
         @set:JacksonInject("body")
         abstract var body: RichText
     }
-}
-
+    @Nestable("raw")
+    abstract class RawContent  : LandingPageElement() {
+        @set:JacksonInject("body")
+        abstract var body: RichText
+    }}
 
 
 interface LandingPage : ContentDef, WebsiteFolderContent, ContentBranchDef<LandingPageElement> {
     /** the pages seo */
     var seo: PageSeo
+    val embed: Embeddables?
 //    @set:JacksonInject(PROPERTY_CHILDREN)
 //    var children: List<LandingPageElement>
 }

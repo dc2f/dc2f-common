@@ -4,6 +4,8 @@ import com.dc2f.*
 import com.dc2f.render.*
 import com.dc2f.richtext.*
 import com.fasterxml.jackson.annotation.JacksonInject
+import java.lang.Appendable
+import java.lang.StringBuilder
 
 interface WithPageSeo : ContentDef, WithSitemapInfo {
     val seo: PageSeo
@@ -45,11 +47,13 @@ interface ResizeConfig {
     val fillType: FillType?
 }
 
-interface FigureEmbeddable : ContentDef {
-    val alt: String?
-    val title: String?
-    val image: ImageAsset
-    val resize: ResizeConfig?
+abstract class FigureEmbeddable : ContentDef {
+    abstract val alt: String?
+    abstract val title: String?
+    abstract val image: ImageAsset
+    abstract val resize: ResizeConfig?
+    /** Renders this as an inline <img> tag, instead of a <figure> **/
+    open var inlineImage: Boolean = false
 }
 
 interface Embeddables : ContentDef {
@@ -81,19 +85,39 @@ abstract class BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, Wit
     abstract val footerMenu: List<Menu>
     abstract val footerContent: ContentReference?
 
+    /** Allows adding additional tags inside <head></head> (e.g. for analytics) */
+    abstract val headInject: String?
+
     //    @JvmDefault
     override fun contentSymlink(): ContentDef? = index
 
 }
 
+@Nestable("folder")
+interface ContentPageFolder : WebsiteFolderContent, ContentBranchDef<WebsiteFolderContent>
+
+@Nestable("content")
+interface ContentPage : ContentDef, WebsiteFolderContent {
+    var seo: PageSeo
+    val embed: Embeddables?
+    @set:JacksonInject("body")
+    var body: RichText
+}
 
 @Nestable("partial")
 abstract class Partial : ContentDef, Renderable {
     @set:JacksonInject("html")
     abstract var html: RichText
+    abstract val embed: Embeddables?
 
     override fun renderContent(renderContext: RenderContext<*>, arguments: Any?): String =
-        html.renderContent(renderContext, arguments)
+        html.renderContent(
+            renderContext.createSubContext(
+                this,
+                AppendableOutput(StringBuilder()),
+                renderContext.node
+            ), arguments
+        )
 }
 
 
