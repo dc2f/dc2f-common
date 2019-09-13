@@ -1,6 +1,7 @@
 package com.dc2f.common
 
 import com.dc2f.api.edit.*
+import com.dc2f.api.edit.ratpack.RatpackDc2fServer
 import com.dc2f.util.Dc2fSetup
 import mu.KotlinLogging
 import com.github.ajalt.clikt.core.*
@@ -27,9 +28,11 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONT
             staticRoot = config.staticDirectory
         )
         watchForChanges2(config)
-        EditApi(
-            config
-        ).serve()
+//        EditApi(
+//            config
+//        ).serve()
+        RatpackDc2fServer(config).serve()
+        logger.info { "Done." }
     }
 
     private fun watchForChanges2(config: EditApiConfig<ROOT_CONTENT>) {

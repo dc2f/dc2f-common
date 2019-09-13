@@ -65,7 +65,6 @@ fun RenderContext<LandingPage>.landingPage() {
 
 
                 is LandingPageElement.Hero -> {
-                    // DIFF added a useless div here, for minimizing diffs
                     section("landing-hero-element section hero") {
                         when(child.colorTheme) {
                             ColorTheme.Primary -> classes = classes + "is-primary" + "is-bold"
