@@ -1,29 +1,38 @@
 package com.dc2f.common
 
-import com.dc2f.api.edit.*
+import com.dc2f.api.edit.EditApiConfig
 import com.dc2f.api.edit.ratpack.RatpackDc2fServer
 import com.dc2f.util.Dc2fSetup
-import mu.KotlinLogging
 import com.github.ajalt.clikt.core.*
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.int
 import com.swoval.files.*
+import com.swoval.functional.Either
 import dev.vishna.watchservice.asWatchChannel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.consumeEach
+import mu.KotlinLogging
 import org.apache.commons.io.FileUtils
 import java.io.File
 import java.nio.file.*
+import java.util.*
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
 private val logger = KotlinLogging.logger {}
 
 
-class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONTENT>) :
-    CliktCommand() {
+class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
+    private val config: Dc2fConfig<ROOT_CONTENT>
+) :
+    CliktCommand(help = "Runs server to live-render website.") {
+    private val port: Int? by option(help = "port to bind to").int()
+
     override fun run() {
+        val secret = UUID.randomUUID().toString()
         val config = EditApiConfig(
             config.setupClass.createInstance(),
-            "asdf",
+            secret,
             FileSystems.getDefault().getPath(config.contentDirectory),
             staticRoot = config.staticDirectory
         )
@@ -31,7 +40,9 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONT
 //        EditApi(
 //            config
 //        ).serve()
-        RatpackDc2fServer(config).serve()
+        RatpackDc2fServer(config).serve(
+            port = port
+        )
         logger.info { "Done." }
     }
 
@@ -50,8 +61,15 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONT
 
         })
         val result = watcher.register(config.contentRoot, Int.MAX_VALUE)
+        if (result is Either.Left) {
+            logger.error(result.value) { "Error while watching directory." }
+        } else {
+            require(result is Either.Right)
+            logger.info { "Successfully watching directory ${result.value}"}
+        }
     }
 
+    @UseExperimental(ExperimentalCoroutinesApi::class)
     @Suppress("unused")
     private fun watchForChanges(config: EditApiConfig<ROOT_CONTENT>) {
         val contentRootFile = config.contentRoot.toFile()
@@ -88,8 +106,12 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONT
     }
 }
 
-class Build<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONTENT>) :
-    CliktCommand() {
+class Build<ROOT_CONTENT : com.dc2f.Website<*>>(
+    private val config: Dc2fConfig<ROOT_CONTENT>
+) :
+    CliktCommand(
+        help = "Builds the website into public/ output directory."
+    ) {
     override fun run() {
         val setup = config.setupClass.createInstance()
         setup.loadWebsite(config.contentDirectory) { loadedWebsite, context ->
@@ -112,8 +134,11 @@ data class Dc2fConfig<ROOT_CONTENT : com.dc2f.Website<*>>(
 )
 
 
-class GeneratorCommand<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONTENT>) :
-    CliktCommand(name = "dc2f") {
+class GeneratorCommand<ROOT_CONTENT : com.dc2f.Website<*>>(
+    config: Dc2fConfig<ROOT_CONTENT>,
+    name: String = "dc2f"
+) :
+    CliktCommand(name = name, printHelpOnEmptyArgs = true) {
 
     init {
         subcommands(Serve(config), Build(config))
@@ -125,6 +150,11 @@ class GeneratorCommand<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfi
 
 
 }
-class Generator<ROOT_CONTENT : com.dc2f.Website<*>>(val config: Dc2fConfig<ROOT_CONTENT>) {
-    fun main(argv: Array<String>) = GeneratorCommand(config).main(argv)
+class Generator<ROOT_CONTENT : com.dc2f.Website<*>>(
+    private val config: Dc2fConfig<ROOT_CONTENT>
+) {
+    fun main(argv: Array<String>) = GeneratorCommand(
+        config,
+        name = System.getenv("DC2F_ARG0")
+    ).main(argv)
 }
