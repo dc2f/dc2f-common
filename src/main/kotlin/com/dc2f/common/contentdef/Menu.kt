@@ -23,7 +23,7 @@ interface MenuDef: ContentDef {
     val name: String
 }
 
-fun <T> debugger(id: Any, block: () -> T): T {
+fun <T> debugger(@Suppress("UNUSED_PARAMETER") id: Any, block: () -> T): T {
     val ret = block()
     logger.debug("got ret: $ret")
     return ret

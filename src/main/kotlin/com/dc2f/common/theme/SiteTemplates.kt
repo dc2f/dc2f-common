@@ -12,6 +12,7 @@ import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
+@SuppressWarnings("unused")
 fun <TAG, T : WithPageSeo> TagConsumer<TAG>.baseTemplate(
     context: RenderContext<T>,
     headInject: HEAD.() -> Unit = {},
@@ -65,7 +66,7 @@ fun <T> TagConsumer<T>.baseTemplate(
                             }
                             website.mainMenu.map { entry ->
                                 a(entry.href(context), classes = "navbar-item") {
-                                    entry.ref?.referencedContent?.let { ref ->
+                                    entry.ref?.referencedContent?.let { _ ->
                                         if (active == entry) {
                                             classes = classes + "is-active"
                                         }
@@ -97,6 +98,7 @@ fun HEAD.property(propertyName: String, content: String) {
 
 enum class Dc2fEnv(val id: String) {
     Production("production"),
+    @Suppress("unused")
     ProductionDrafts("production-drafts"),
     Dev("dev"),
     ;
@@ -107,8 +109,8 @@ enum class Dc2fEnv(val id: String) {
                 .also { logger.info { "DC2F_ENV is $it" } }
         }
 
-        private fun findById(id: String?, default: Dc2fEnv = Dc2fEnv.Dev) =
-            id?.let { idString -> Dc2fEnv.values().firstOrNull { it.id == idString } }
+        private fun findById(id: String?, default: Dc2fEnv = Dev) =
+            id?.let { idString -> values().firstOrNull { it.id == idString } }
                 ?: default
     }
 }
@@ -121,6 +123,7 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
     }
     property("og:title", title)
 
+    @Suppress("UNUSED_VARIABLE")
     val env = Dc2fEnv.current
 
     meta(charset = "UTF-8")

@@ -117,8 +117,8 @@ class Build<ROOT_CONTENT : com.dc2f.Website<*>>(
         setup.loadWebsite(config.contentDirectory) { loadedWebsite, context ->
             logger.info { "loaded website $loadedWebsite." }
             val targetPath = FileSystems.getDefault().getPath("public")
-            setup.renderToPath(targetPath, loadedWebsite, context) { renderer ->
-
+            setup.renderToPath(targetPath, loadedWebsite, context) {
+                // TODO do we need to render antyhing more here?
             }
 
             // FIXME workaround for now to copy over some assets only referenced by css (fonts)
