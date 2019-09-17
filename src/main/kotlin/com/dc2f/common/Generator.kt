@@ -1,8 +1,10 @@
 package com.dc2f.common
 
+import com.dc2f.*
 import com.dc2f.api.edit.EditApiConfig
 import com.dc2f.api.edit.ratpack.RatpackDc2fServer
-import com.dc2f.util.Dc2fSetup
+import com.dc2f.render.*
+import com.dc2f.util.*
 import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
@@ -31,7 +33,7 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
     override fun run() {
         val secret = UUID.randomUUID().toString()
         val config = EditApiConfig(
-            config.setupClass.createInstance(),
+            config,
             secret,
             FileSystems.getDefault().getPath(config.contentDirectory),
             staticRoot = config.staticDirectory
@@ -113,11 +115,10 @@ class Build<ROOT_CONTENT : com.dc2f.Website<*>>(
         help = "Builds the website into public/ output directory."
     ) {
     override fun run() {
-        val setup = config.setupClass.createInstance()
-        setup.loadWebsite(config.contentDirectory) { loadedWebsite, context ->
+        config.loadWebsite(config.contentDirectory) { loadedWebsite, context ->
             logger.info { "loaded website $loadedWebsite." }
             val targetPath = FileSystems.getDefault().getPath("public")
-            setup.renderToPath(targetPath, loadedWebsite, context) {
+            config.renderToPath(targetPath, loadedWebsite, context) {
                 // TODO do we need to render antyhing more here?
             }
 
@@ -127,11 +128,6 @@ class Build<ROOT_CONTENT : com.dc2f.Website<*>>(
     }
 }
 
-data class Dc2fConfig<ROOT_CONTENT : com.dc2f.Website<*>>(
-    val contentDirectory: String,
-    val staticDirectory: String,
-    val setupClass: KClass<out Dc2fSetup<ROOT_CONTENT>>
-)
 
 
 class GeneratorCommand<ROOT_CONTENT : com.dc2f.Website<*>>(
