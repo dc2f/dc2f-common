@@ -151,6 +151,6 @@ class Generator<ROOT_CONTENT : com.dc2f.Website<*>>(
 ) {
     fun main(argv: Array<String>) = GeneratorCommand(
         config,
-        name = System.getenv("DC2F_ARG0")
+        name = System.getenv("DC2F_ARG0") ?: "dc2f"
     ).main(argv)
 }
