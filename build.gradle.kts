@@ -7,7 +7,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
  */
 
 group = "com.dc2f"
-version = "0.0.1-SNAPSHOT"
+if (version == "unspecified") {
+    version = "0.1.3-SNAPSHOT"
+}
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
@@ -44,8 +46,8 @@ dependencies {
 
     implementation("com.swoval:file-tree-views:2.1.3")
 
-    api("com.dc2f:dc2f:0.1.3-SNAPSHOT")
-    api("com.dc2f:dc2f-edit-api:+")
+    api("com.dc2f:dc2f:$version")
+    api("com.dc2f:dc2f-edit-api:$version")
 
     implementation("com.github.vishna:watchservice-ktx:master-SNAPSHOT")
 
