@@ -1,10 +1,8 @@
 package com.dc2f.common
 
-import com.dc2f.*
 import com.dc2f.api.edit.EditApiConfig
 import com.dc2f.api.edit.ratpack.RatpackDc2fServer
-import com.dc2f.render.*
-import com.dc2f.util.*
+import com.dc2f.util.Dc2fConfig
 import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.int
@@ -15,11 +13,9 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.consumeEach
 import mu.KotlinLogging
 import org.apache.commons.io.FileUtils
-import java.io.File
+import java.io.*
 import java.nio.file.*
 import java.util.*
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 private val logger = KotlinLogging.logger {}
 
@@ -53,7 +49,7 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
         watcher.addObserver(object : FileTreeViews.Observer<PathWatchers.Event> {
 
             override fun onError(t: Throwable) {
-                logger.error(t) { "Error while observing paths."}
+                logger.error(t) { "Error while observing paths." }
             }
 
             override fun onNext(t: PathWatchers.Event) {
@@ -63,11 +59,11 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
 
         })
         val result = watcher.register(config.contentRoot, Int.MAX_VALUE)
-        if (result is Either.Left) {
+        if (result is Either.Left<IOException, *>) {
             logger.error(result.value) { "Error while watching directory." }
         } else {
             require(result is Either.Right)
-            logger.info { "Successfully watching directory ${result.value}"}
+            logger.info { "Successfully watching directory ${result.value}" }
         }
     }
 
@@ -78,9 +74,14 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
         val channel = contentRootFile.asWatchChannel()
         GlobalScope.launch(Dispatchers.IO) {
             channel.consumeEach { event ->
-                val changedPath = event.file.toPath()
-                pathChanged(config, changedPath)
+                try {
+                    val changedPath = event.file.toPath()
+                    pathChanged(config, changedPath)
+                } catch (e: Exception) {
+                    logger.warn(e) { "Error while watching for changes." }
+                }
             }
+            logger.info { "Finished consuming changes." }
         }
     }
 
@@ -105,6 +106,7 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
             }
             contentFsPath = contentFsPath.parent
         }
+        logger.debug { "finished processing change." }
     }
 }
 
@@ -129,7 +131,6 @@ class Build<ROOT_CONTENT : com.dc2f.Website<*>>(
 }
 
 
-
 class GeneratorCommand<ROOT_CONTENT : com.dc2f.Website<*>>(
     config: Dc2fConfig<ROOT_CONTENT>,
     name: String = "dc2f"
@@ -146,6 +147,7 @@ class GeneratorCommand<ROOT_CONTENT : com.dc2f.Website<*>>(
 
 
 }
+
 class Generator<ROOT_CONTENT : com.dc2f.Website<*>>(
     private val config: Dc2fConfig<ROOT_CONTENT>
 ) {

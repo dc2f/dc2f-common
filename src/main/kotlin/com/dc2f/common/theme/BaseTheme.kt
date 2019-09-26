@@ -14,6 +14,7 @@ fun Theme.baseTheme() {
         createSubContext(node.index, out, enclosingNode = null).render()
     }
     embeddable()
+    commonBlogTemplates()
     config.pageRenderer<PartialFolder> {} // no need to render anything.
     config.pageRenderer<LandingPage> { landingPage() }
     config.pageRenderer<ContentPage> { contentPage() }

@@ -9,12 +9,12 @@ import java.time.ZonedDateTime
 
 
 @Nestable("blog")
-interface Blog: WebsiteFolderContent, ContentBranchDef<Article>,
+interface Blog : WebsiteFolderContent, ContentBranchDef<Article>,
     WithPageSeo
 
 
 @Nestable("article")
-interface Article: ContentDef, SlugCustomization, WithAuthor,
+interface Article : ContentDef, SlugCustomization, WithAuthor,
     WithWordCount, WithMainImage,
     WebsiteFolderContent,
     WithRenderPathOverride {
