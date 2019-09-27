@@ -41,7 +41,7 @@ interface WebsiteFolderContent : ContentDef, SlugCustomization, WithRedirect, Wi
         renderPathAliases?.map { RenderPath.parseLeafPath(it) }
 }
 
-interface ResizeConfig {
+interface ResizeConfig : ContentDef {
     val width: Int?
     val height: Int?
     val fillType: FillType?
