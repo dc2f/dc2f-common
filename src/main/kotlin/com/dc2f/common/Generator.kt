@@ -118,7 +118,7 @@ class Build<ROOT_CONTENT : com.dc2f.Website<*>>(
     ) {
     override fun run() {
         config.loadWebsite(config.contentDirectory) { loadedWebsite, context ->
-            logger.info { "loaded website $loadedWebsite." }
+            logger.info { "loaded website ${loadedWebsite.content.name}." }
             val targetPath = FileSystems.getDefault().getPath("public")
             config.renderToPath(targetPath, loadedWebsite, context) {
                 // TODO do we need to render antyhing more here?

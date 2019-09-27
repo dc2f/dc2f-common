@@ -73,7 +73,7 @@ interface BaseConfig : ContentDef {
     val logo: ImageAsset?
 }
 
-abstract class BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithContentSymlink {
+interface BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithContentSymlink {
     @set:JacksonInject("index")
     abstract var index: LandingPage
     abstract val config: BaseConfig
@@ -88,7 +88,7 @@ abstract class BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, Wit
     /** Allows adding additional tags inside <head></head> (e.g. for analytics) */
     abstract val headInject: String?
 
-    //    @JvmDefault
+    @JvmDefault
     override fun contentSymlink(): ContentDef? = index
 
 }

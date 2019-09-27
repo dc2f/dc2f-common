@@ -8,6 +8,7 @@ import java.time.format.*
 
 fun Theme.commonBlogTemplates() {
     config.pageRenderer<Blog> {
+        renderChildren(node.children)
         appendHTML().baseTemplate(this, node.seo) {
             div("container") {
                 div("section has-text-centered") {
