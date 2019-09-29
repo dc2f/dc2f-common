@@ -104,10 +104,16 @@ enum class Dc2fEnv(val id: String) {
     ;
 
     companion object {
-        val current by lazy {
+        private val currentFromEnvironment by lazy {
             findById(System.getenv("DC2F_ENV"))
                 .also { logger.info { "DC2F_ENV is $it" } }
         }
+        private var currentOverride: Dc2fEnv? = null
+
+        var current
+            set(value) { currentOverride = value }
+            get() = currentOverride ?: currentFromEnvironment
+
 
         private fun findById(id: String?, default: Dc2fEnv = Dev) =
             id?.let { idString -> values().firstOrNull { it.id == idString } }
@@ -117,7 +123,7 @@ enum class Dc2fEnv(val id: String) {
 
 fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
     val website = context.rootNode as BaseWebsite
-    val title = "${seo.title} | Anlage.App"
+    val title = "${seo.title} | ${website.name}"
     title {
         +title
     }
@@ -178,13 +184,7 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
 
     @Suppress("SimplifiableCallChain")
     val linkedData = if (website.index == context.node) {
-        mapOf(
-            "@context" to "http://schema.org",
-            "@type" to "Product",
-            "url" to context.href(website, true),
-            "name" to "Anlage.App",
-            "logo" to website.config.logo?.href(context, absoluteUri = true)
-        )
+        website.createLinkedData(context)
     } else {
         LinkedHashMap<String, Any>().apply {
             put("@context", "http://schema.org")
@@ -220,8 +220,10 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
             put("description", seo.description)
         }
     }
-    script("application/ld+json") {
-        unsafe { raw(ObjectMapper().writeValueAsString(linkedData)) }
+    if (linkedData != null) {
+        script("application/ld+json") {
+            unsafe { raw(ObjectMapper().writeValueAsString(linkedData)) }
+        }
     }
 
     (context.node as? Article)?.let { article ->

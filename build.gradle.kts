@@ -39,7 +39,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:1.3.1")
 
     implementation("io.github.microutils:kotlin-logging:1.4.9")
-    implementation("com.github.ajalt:clikt:2.1.0")
+    implementation("com.github.ajalt:clikt:2.2.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.9")
 
     implementation("com.swoval:file-tree-views:2.1.3")

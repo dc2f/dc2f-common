@@ -2,10 +2,11 @@ package com.dc2f.common
 
 import com.dc2f.api.edit.EditApiConfig
 import com.dc2f.api.edit.ratpack.RatpackDc2fServer
+import com.dc2f.common.theme.Dc2fEnv
 import com.dc2f.util.Dc2fConfig
 import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.types.int
+import com.github.ajalt.clikt.parameters.types.*
 import com.swoval.files.*
 import com.swoval.functional.Either
 import dev.vishna.watchservice.asWatchChannel
@@ -116,7 +117,10 @@ class Build<ROOT_CONTENT : com.dc2f.Website<*>>(
     CliktCommand(
         help = "Builds the website into public/ output directory."
     ) {
+    val env: Dc2fEnv? by option().enum<Dc2fEnv> { it.id }
+
     override fun run() {
+        env?.let { Dc2fEnv.current = it }
         config.loadWebsite(config.contentDirectory) { loadedWebsite, context ->
             logger.info { "loaded website ${loadedWebsite.content.name}." }
             val targetPath = FileSystems.getDefault().getPath("public")

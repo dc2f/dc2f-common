@@ -50,10 +50,11 @@ fun Theme.contentTemplates() {
 fun Theme.robotsTxt() {
     config.pageRenderer<BaseWebsite>(OutputType.robotsTxt) {
         out.appendln("User-agent: *")
+
         if (Dc2fEnv.current == Dc2fEnv.Production) {
             out.appendln("Allow: /")
             out.appendln("")
-            out.appendln("Sitemap: https://anlage.app/sitemap.xml")
+            out.appendln("Sitemap: ${renderer.href(RenderPath.root.childLeaf("sitemap.xml"), true)}")
         } else {
             out.appendln("Disallow: /")
         }

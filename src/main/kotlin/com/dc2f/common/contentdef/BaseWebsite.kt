@@ -4,8 +4,6 @@ import com.dc2f.*
 import com.dc2f.render.*
 import com.dc2f.richtext.*
 import com.fasterxml.jackson.annotation.JacksonInject
-import java.lang.Appendable
-import java.lang.StringBuilder
 
 interface WithPageSeo : ContentDef, WithSitemapInfo {
     val seo: PageSeo
@@ -56,6 +54,7 @@ abstract class FigureEmbeddable : ContentDef {
     open var inlineImage: Boolean = false
 }
 
+@Suppress("unused")
 interface Embeddables : ContentDef {
     val references: Map<String, ContentReference>?
     val figures: Map<String, FigureEmbeddable>?
@@ -73,6 +72,7 @@ interface BaseConfig : ContentDef {
     val logo: ImageAsset?
 }
 
+@Suppress("RedundantModalityModifier", "unused", "unused")
 interface BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithContentSymlink {
     @set:JacksonInject("index")
     abstract var index: LandingPage
@@ -90,6 +90,15 @@ interface BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithCont
 
     @JvmDefault
     override fun contentSymlink(): ContentDef? = index
+
+    @JvmDefault
+    open fun createLinkedData(context: RenderContext<*>): Map<String, Any?>? = mapOf(
+        "@context" to "http://schema.org",
+        "@type" to "Product",
+        "url" to context.href(this.index, true),
+        "name" to name,
+        "logo" to config.logo?.href(context, absoluteUri = true)
+    )
 
 }
 
