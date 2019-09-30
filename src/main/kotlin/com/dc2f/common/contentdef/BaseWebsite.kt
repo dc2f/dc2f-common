@@ -106,11 +106,31 @@ interface BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithCont
 interface ContentPageFolder : WebsiteFolderContent, ContentBranchDef<WebsiteFolderContent>
 
 @Nestable("content")
-interface ContentPage : ContentDef, WebsiteFolderContent {
-    var seo: PageSeo
+interface ContentPage : ContentDef, WebsiteFolderContent, WithPageSeo {
+    override var seo: PageSeo
     val embed: Embeddables?
     @set:JacksonInject("body")
     var body: RichText
+}
+
+/**
+ * Simple page with html content.
+ */
+@Nestable("htmlpage")
+interface HtmlPage : ContentPage, WithRenderPathOverride {
+    /** additional code which will end up in the <head> section of the page. */
+    @set:JacksonInject("head")
+    var head: RichText?
+    @set:JacksonInject("html")
+    var html: RichText
+    var params: Map<String, Any>?
+    var renderOnlyHtml: Boolean?
+    var renderPath: String?
+
+    @JvmDefault
+    override fun renderPath(renderer: Renderer): RenderPath? =
+        renderPath?.let { RenderPath.parseLeafPath(it) }
+
 }
 
 @Nestable("partial")

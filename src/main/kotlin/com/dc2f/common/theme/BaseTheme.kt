@@ -1,10 +1,7 @@
 package com.dc2f.common.theme
 
-import com.dc2f.FillType
 import com.dc2f.common.contentdef.*
-import com.dc2f.common.theme.img
 import com.dc2f.render.*
-import com.dc2f.richtext.RichText
 import kotlinx.html.*
 
 fun Theme.baseTheme() {
@@ -17,6 +14,7 @@ fun Theme.baseTheme() {
     commonBlogTemplates()
     config.pageRenderer<PartialFolder> {} // no need to render anything.
     config.pageRenderer<LandingPage> { landingPage() }
+    config.pageRenderer<HtmlPage> { htmlPage() }
     config.pageRenderer<ContentPage> { contentPage() }
     config.pageRenderer<ContentPageFolder> {
         renderChildren(node.children)
@@ -33,7 +31,7 @@ private fun RenderContext<ContentPage>.contentPage() {
         this,
         node.seo
     ) {
-        div("section") {
+        section("section") {
             div("container") {
                 div("content") {
                     richText(context, node.body)
@@ -43,6 +41,31 @@ private fun RenderContext<ContentPage>.contentPage() {
     }
 }
 
+private fun RenderContext<HtmlPage>.htmlPage() {
+    appendHTML().baseTemplate(context, headInject = { richText(context, node.head) }) {
+        if (node.renderOnlyHtml == true) {
+            requireNotNull(node.html) { "renderOnlyHtml was defined true, but no html attribute was found."}
+            richText(context, node.html)
+        } else {
+            // DIFF because of some reason i have used `div` instead of `section` on old page.
+            div("section") {
+                div("container") {
+                    div("columns is-centered") {
+                        div("column has-text-centered is-half is-narrow") {
+                            h1("title") { +node.seo.title }
+                            div("content") {
+                                richText(context, node.body)
+                            }
+                        }
+                    }
+
+                    richText(context, node.html)
+
+                }
+            }
+        }
+    }
+}
 
 fun Theme.contentTemplates() {
 }
