@@ -3,6 +3,7 @@ package com.dc2f.common
 import com.dc2f.api.edit.EditApiConfig
 import com.dc2f.api.edit.ratpack.RatpackDc2fServer
 import com.dc2f.common.theme.Dc2fEnv
+import com.dc2f.render.*
 import com.dc2f.util.Dc2fConfig
 import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.parameters.options.option
@@ -17,6 +18,7 @@ import org.apache.commons.io.FileUtils
 import java.io.*
 import java.nio.file.*
 import java.util.*
+import kotlin.reflect.KClass
 
 private val logger = KotlinLogging.logger {}
 
@@ -46,6 +48,10 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
     }
 
     private fun watchForChanges2(config: EditApiConfig<ROOT_CONTENT>) {
+        val assetPath = (this.config as? GeneratorDc2fConfig<*>)?.assetBaseDirectory?.let {
+            FileSystems.getDefault().getPath(it).toAbsolutePath()
+        }
+
         val watcher = PathWatchers.get(true)
         watcher.addObserver(object : FileTreeViews.Observer<PathWatchers.Event> {
 
@@ -55,10 +61,23 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
 
             override fun onNext(t: PathWatchers.Event) {
                 logger.debug { "Detected path $t change ${t.typedPath.path}" }
-                runBlocking { pathChanged(config, t.typedPath.path) }
+                runBlocking {
+                    if (assetPath != null) {
+                        logger.debug { "vs. $assetPath" }
+                        if (t.typedPath.path.startsWith(assetPath)) {
+                            config.deps.context.imageCache.assetPipelineCache.clear()
+                            logger.debug { "Done clearing asset cache." }
+                            config.deps.triggerRefreshListeners()
+                        }
+                    }
+                    pathChanged(config, t.typedPath.path)
+                }
             }
 
         })
+        assetPath?.let {
+            watcher.register(assetPath, Int.MAX_VALUE)
+        }
         val result = watcher.register(config.contentRoot, Int.MAX_VALUE)
         if (result is Either.Left<IOException, *>) {
             logger.error(result.value) { "Error while watching directory." }
@@ -125,7 +144,7 @@ class Build<ROOT_CONTENT : com.dc2f.Website<*>>(
             logger.info { "loaded website ${loadedWebsite.content.name}." }
             val targetPath = FileSystems.getDefault().getPath("public")
             config.renderToPath(targetPath, loadedWebsite, context) {
-                // TODO do we need to render antyhing more here?
+                // TODO do we need to render anything more here?
             }
 
             // FIXME workaround for now to copy over some assets only referenced by css (fonts)
@@ -160,3 +179,22 @@ class Generator<ROOT_CONTENT : com.dc2f.Website<*>>(
         name = System.getenv("DC2F_ARG0") ?: "dc2f"
     ).main(argv)
 }
+
+open class GeneratorDc2fConfig<ROOT_CONTENT : com.dc2f.Website<*>>(
+    contentDirectory: String,
+    staticDirectory: String,
+    rootContentType: KClass<ROOT_CONTENT>,
+    urlConfigFromRootContent: (rootConfig: ROOT_CONTENT) -> UrlConfig,
+    theme: Theme,
+    /**
+     * Optional base directory for assets, only used during
+     * [Serve]
+     */
+    val assetBaseDirectory: String?
+) : Dc2fConfig<ROOT_CONTENT>(
+    contentDirectory,
+    staticDirectory,
+    rootContentType,
+    urlConfigFromRootContent,
+    theme
+)
