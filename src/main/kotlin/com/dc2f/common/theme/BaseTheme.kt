@@ -4,68 +4,93 @@ import com.dc2f.common.contentdef.*
 import com.dc2f.render.*
 import kotlinx.html.*
 
-fun Theme.baseTheme() {
-    robotsTxt()
-    config.pageRenderer<BaseWebsite> {
-        renderChildren(node.children)
-        createSubContext(node.index, out, enclosingNode = null).render()
+open class BaseTheme : Theme() {
+    override fun configure(config: ThemeConfig) {
+        baseTheme()
     }
-    embeddable()
-    commonBlogTemplates()
-    config.pageRenderer<PartialFolder> {} // no need to render anything.
-    config.pageRenderer<LandingPage> { landingPage() }
-    config.pageRenderer<HtmlPage> { htmlPage() }
-    config.pageRenderer<ContentPage> { contentPage() }
-    config.pageRenderer<ContentPageFolder> {
-        renderChildren(node.children)
-//        node.index?.let(::renderNode)
-        node.index?.let { index ->
-            createSubContext(index, out = out, enclosingNode = null).render()
+
+    fun baseTheme() {
+        robotsTxt()
+        config.pageRenderer<BaseWebsite> {
+            renderChildren(node.children)
+            createSubContext(node.index, out, enclosingNode = null).render()
         }
+        embeddable()
+        commonBlogTemplates()
+        config.pageRenderer<PartialFolder> {} // no need to render anything.
+        landingPageTemplates()
+        config.pageRenderer<HtmlPage> { htmlPage() }
+        config.pageRenderer<ContentPage> { contentPage() }
+        config.pageRenderer<ContentPageFolder> {
+            renderChildren(node.children)
+//        node.index?.let(::renderNode)
+            node.index?.let { index ->
+                createSubContext(index, out = out, enclosingNode = null).render()
+            }
+        }
+
     }
 
-}
+    open fun <T> TagConsumer<T>.baseTemplate(
+        context: RenderContext<*>,
+        seo: PageSeo,
+        headInject: HEAD.() -> Unit = {},
+        navbarMenuOverride: (DIV.() -> Unit)? = null,
+        mainContent: MAIN.() -> Unit
+    ) = baseTemplateImpl(context, seo, headInject, navbarMenuOverride, mainContent)
 
-private fun RenderContext<ContentPage>.contentPage() {
-    appendHTML().baseTemplate(
-        this,
-        node.seo
-    ) {
-        section("section") {
-            div("container") {
-                div("content") {
-                    richText(context, node.body)
+    @SuppressWarnings("unused")
+    fun <TAG, T : WithPageSeo> TagConsumer<TAG>.baseTemplate(
+        context: RenderContext<T>,
+        headInject: HEAD.() -> Unit = {},
+        mainContent: MAIN.() -> Unit
+    ) = baseTemplate(context, context.node.seo, headInject, mainContent = mainContent)
+
+    private fun RenderContext<ContentPage>.contentPage() {
+        appendHTML().baseTemplate(
+            this,
+            node.seo
+        ) {
+            section("section") {
+                div("container") {
+                    div("content") {
+                        richText(context, node.body)
+                    }
                 }
             }
         }
     }
-}
 
-private fun RenderContext<HtmlPage>.htmlPage() {
-    appendHTML().baseTemplate(context, headInject = { richText(context, node.head) }) {
-        if (node.renderOnlyHtml == true) {
-            requireNotNull(node.html) { "renderOnlyHtml was defined true, but no html attribute was found."}
-            richText(context, node.html)
-        } else {
-            // DIFF because of some reason i have used `div` instead of `section` on old page.
-            div("section") {
-                div("container") {
-                    div("columns is-centered") {
-                        div("column has-text-centered is-half is-narrow") {
-                            h1("title") { +node.seo.title }
-                            div("content") {
-                                richText(context, node.body)
+    private fun RenderContext<HtmlPage>.htmlPage() {
+        appendHTML().baseTemplate(context, headInject = { richText(context, node.head) }) {
+            if (node.renderOnlyHtml == true) {
+                requireNotNull(node.html) { "renderOnlyHtml was defined true, but no html attribute was found."}
+                richText(context, node.html)
+            } else {
+                // DIFF because of some reason i have used `div` instead of `section` on old page.
+                div("section") {
+                    div("container") {
+                        div("columns is-centered") {
+                            div("column has-text-centered is-half is-narrow") {
+                                h1("title") { +node.seo.title }
+                                div("content") {
+                                    richText(context, node.body)
+                                }
                             }
                         }
+
+                        richText(context, node.html)
+
                     }
-
-                    richText(context, node.html)
-
                 }
             }
         }
     }
+
 }
+
+
+
 
 fun Theme.contentTemplates() {
 }

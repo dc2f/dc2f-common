@@ -12,15 +12,9 @@ import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
-@SuppressWarnings("unused")
-fun <TAG, T : WithPageSeo> TagConsumer<TAG>.baseTemplate(
-    context: RenderContext<T>,
-    headInject: HEAD.() -> Unit = {},
-    mainContent: MAIN.() -> Unit
-) = baseTemplate(context, context.node.seo, headInject, mainContent = mainContent)
 
 
-fun <T> TagConsumer<T>.baseTemplate(
+fun <T> TagConsumer<T>.baseTemplateImpl(
     context: RenderContext<*>,
     seo: PageSeo,
     headInject: HEAD.() -> Unit = {},

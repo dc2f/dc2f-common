@@ -2,11 +2,10 @@ package com.dc2f.common.theme
 
 import com.dc2f.FillType
 import com.dc2f.common.contentdef.*
-import com.dc2f.render.Theme
 import kotlinx.html.*
 import java.time.format.*
 
-fun Theme.commonBlogTemplates() {
+fun BaseTheme.commonBlogTemplates() {
     config.pageRenderer<Blog> {
         renderChildren(node.children)
         appendHTML().baseTemplate(this, node.seo) {
