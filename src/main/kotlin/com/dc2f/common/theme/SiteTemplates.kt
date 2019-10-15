@@ -23,16 +23,20 @@ fun <T> TagConsumer<T>.baseTemplateImpl(
 ) =
     scaffold(context, seo, headInject) {
         val website = context.rootNode as BaseWebsite
-        nav("navbar has-shadow is-spaced is-fixed-top") {
+        nav("main-navbar navbar has-shadow is-spaced is-fixed-top") {
             role = "navigation"
             attributes["aria-label"] = "main navigation"
             div("container") {
                 div("navbar-brand") {
-                    website.navBarLogo?.let { logo ->
+                    website.navBar?.let { navBar ->
                         a("/", classes = "navbar-item") {
-                            // TODO image stuff
-                            img(context, logo, null) {
-                                alt = website.name
+                            navBar.logo?.let { logo ->
+                                img(context, logo, null) {
+                                    alt = website.name
+                                }
+                            }
+                            navBar.title?.let {
+                                span { +it }
                             }
                         }
                     }

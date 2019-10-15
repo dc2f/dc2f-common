@@ -72,12 +72,17 @@ interface BaseConfig : ContentDef {
     val logo: ImageAsset?
 }
 
+interface NavBar : ContentDef {
+    abstract val logo: ImageAsset?
+    abstract val title: String?
+}
+
 @Suppress("RedundantModalityModifier", "unused", "unused")
 interface BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithContentSymlink {
     @set:JacksonInject("index")
     abstract var index: LandingPage
     abstract val config: BaseConfig
-    abstract val navBarLogo: ImageAsset?
+    abstract val navBar: NavBar?
 
     abstract val embed: Embeddables?
 

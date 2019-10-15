@@ -10,9 +10,8 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.*
 import com.swoval.files.*
 import com.swoval.functional.Either
-import dev.vishna.watchservice.asWatchChannel
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.consumeEach
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.apache.commons.io.FileUtils
 import java.io.*
@@ -87,23 +86,30 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
         }
     }
 
-    @UseExperimental(ExperimentalCoroutinesApi::class)
-    @Suppress("unused")
-    private fun watchForChanges(config: EditApiConfig<ROOT_CONTENT>) {
-        val contentRootFile = config.contentRoot.toFile()
-        val channel = contentRootFile.asWatchChannel()
-        GlobalScope.launch(Dispatchers.IO) {
-            channel.consumeEach { event ->
-                try {
-                    val changedPath = event.file.toPath()
-                    pathChanged(config, changedPath)
-                } catch (e: Exception) {
-                    logger.warn(e) { "Error while watching for changes." }
-                }
-            }
-            logger.info { "Finished consuming changes." }
-        }
-    }
+    val changeChannel = Channel<PathWatchers.Event>(capacity = Channel.UNLIMITED);
+
+//    @UseExperimental(ExperimentalCoroutinesApi::class)
+//    @Suppress("unused")
+//    private fun watchForChanges(config: EditApiConfig<ROOT_CONTENT>) {
+//        val contentRootFile = config.contentRoot.toFile()
+//        val channel = contentRootFile.asWatchChannel()
+//        GlobalScope.launch(Dispatchers.IO) {
+//            channel.consumeEach { event ->
+//                try {
+//                    val changedPath = event.file.toPath()
+//                    pathChanged(config, changedPath)
+//                } catch (e: Exception) {
+//                    logger.warn(e) { "Error while watching for changes." }
+//                }
+//            }
+//            logger.info { "Finished consuming changes." }
+//        }
+//    }
+
+    val ignoreChanges = arrayOf(
+        Regex(""".*___jb_old___$"""),
+        Regex(""".*___jb_tmp___$""")
+    )
 
     private suspend fun pathChanged(config: EditApiConfig<ROOT_CONTENT>, changedPath: Path) {
         logger.info { "change: $changedPath" }
@@ -111,6 +117,10 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
         val deps = config.deps
         val rootPath = config.contentRoot.toAbsolutePath()
         var contentFsPath = changedPath.toAbsolutePath()
+        if (ignoreChanges.any { it.matches(contentFsPath.toString()) }) {
+            logger.debug { "Ignoring fs path: $contentFsPath" }
+            return
+        }
         logger.debug { "Change for fs path: $contentFsPath" }
 //                if (contentFsPath.endsWith("_index.yml")) {
 //                    contentFsPath
@@ -126,6 +136,7 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
             }
             contentFsPath = contentFsPath.parent
         }
+        config.deps.triggerRefreshListeners()
         logger.debug { "finished processing change." }
     }
 }
