@@ -175,12 +175,12 @@ fun BaseTheme.landingPageTemplates() {
                     is LandingPageElement.Content ->
                         section("section") {
                             div("container content") {
-                                richText(context, child.body)
+                                richText(createSubContext(child, out = out, enclosingNode = node), child.body)
                             }
                         }
                     is LandingPageElement.RawContent ->
 //                    section("section") {
-                        richText(context, child.body)
+                        richText(createSubContext(child, out = out, enclosingNode = node), child.body)
 //                    }
 
                     else ->

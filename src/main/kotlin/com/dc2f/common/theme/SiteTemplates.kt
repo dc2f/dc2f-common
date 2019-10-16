@@ -12,81 +12,100 @@ import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
+interface BaseTemplateForTheme : ThemeMarker {
 
-
-fun <T> TagConsumer<T>.baseTemplateImpl(
-    context: RenderContext<*>,
-    seo: PageSeo,
-    headInject: HEAD.() -> Unit = {},
-    navbarMenuOverride: (DIV.() -> Unit)? = null,
-    mainContent: MAIN.() -> Unit
-) =
-    scaffold(context, seo, headInject) {
-        val website = context.rootNode as BaseWebsite
-        nav("main-navbar navbar has-shadow is-spaced is-fixed-top") {
-            role = "navigation"
-            attributes["aria-label"] = "main navigation"
-            div("container") {
-                div("navbar-brand") {
-                    website.navBar?.let { navBar ->
-                        a("/", classes = "navbar-item") {
-                            navBar.logo?.let { logo ->
-                                img(context, logo, null) {
-                                    alt = website.name
-                                }
-                            }
-                            navBar.title?.let {
-                                span { +it }
-                            }
+    open fun <T> baseTemplateNavBar(
+        tc: TagConsumer<T>,
+        context: RenderContext<*>,
+        website: BaseWebsite,
+        navbarMenuOverride: (DIV.() -> Unit)? = null
+    ) {
+        tc.div("navbar-brand") {
+            website.navBar?.let { navBar ->
+                a("/", classes = "navbar-item") {
+                    navBar.logo?.let { logo ->
+                        img(context, logo, null) {
+                            alt = website.name
                         }
                     }
-
-                    a(classes = "navbar-burger") {
-                        role = "button"
-                        attributes["data-target"] = "main-menu"
-                        attributes["aria-label"] = "menu"
-                        attributes["aria-expanded"] = "false"
-                        span { attributes["aria-hidden"] = "true" }; +" "
-                        span { attributes["aria-hidden"] = "true" }; +" "
-                        span { attributes["aria-hidden"] = "true" }
-                    }
-                }
-                div("navbar-menu") {
-                    id = "main-menu"
-                    div("navbar-end") {
-                        if (navbarMenuOverride == null) {
-                            val active = website.mainMenu.findActiveEntry(context.renderer.loaderContext, context.node)?.let { activeEntry ->
-                                if (activeEntry.ref?.referencedContentPath(context.renderer.loaderContext)?.isRoot == true && activeEntry.ref?.referencedContent != context.node) {
-                                    null
-                                } else {
-                                    activeEntry
-                                }
-                            }
-                            website.mainMenu.map { entry ->
-                                a(entry.href(context), classes = "navbar-item") {
-                                    entry.ref?.referencedContent?.let { _ ->
-                                        if (active == entry) {
-                                            classes = classes + "is-active"
-                                        }
-                                    }
-                                    title = entry.linkLabel
-                                    +entry.linkLabel
-                                }
-                            }
-                        } else {
-                            navbarMenuOverride()
-                        }
+                    navBar.title?.let {
+                        span { +it }
                     }
                 }
             }
-        }
 
-        main {
-            mainContent()
+            a(classes = "navbar-burger") {
+                role = "button"
+                attributes["data-target"] = "main-menu"
+                attributes["aria-label"] = "menu"
+                attributes["aria-expanded"] = "false"
+                span { attributes["aria-hidden"] = "true" }; +" "
+                span { attributes["aria-hidden"] = "true" }; +" "
+                span { attributes["aria-hidden"] = "true" }
+            }
         }
-
-        siteFooter(context)
+        tc.div("navbar-menu") {
+            id = "main-menu"
+            div("navbar-end") {
+                if (navbarMenuOverride == null) {
+                    val active = website.mainMenu.findActiveEntry(
+                        context.renderer.loaderContext,
+                        context.node
+                    )?.let { activeEntry ->
+                        if (activeEntry.ref?.referencedContentPath(
+                                context.renderer.loaderContext
+                            )?.isRoot == true && activeEntry.ref?.referencedContent != context.node
+                        ) {
+                            null
+                        } else {
+                            activeEntry
+                        }
+                    }
+                    website.mainMenu.map { entry ->
+                        a(
+                            entry.href(context),
+                            classes = "navbar-item"
+                        ) {
+                            entry.ref?.referencedContent?.let { _ ->
+                                if (active == entry) {
+                                    classes = classes + "is-active"
+                                }
+                            }
+                            title = entry.linkLabel
+                            +entry.linkLabel
+                        }
+                    }
+                } else {
+                    navbarMenuOverride()
+                }
+            }
+        }
     }
+
+    open fun <T> TagConsumer<T>.baseTemplateImpl(
+        context: RenderContext<*>,
+        seo: PageSeo,
+        headInject: HEAD.() -> Unit = {},
+        navbarMenuOverride: (DIV.() -> Unit)? = null,
+        mainContent: MAIN.() -> Unit
+    ) =
+        scaffold(context, seo, headInject) {
+            val website = context.rootNode as BaseWebsite
+            nav("main-navbar navbar has-shadow is-spaced is-fixed-top") {
+                role = "navigation"
+                attributes["aria-label"] = "main navigation"
+                div("container") {
+                    baseTemplateNavBar(this@baseTemplateImpl, context, website, navbarMenuOverride)
+                }
+            }
+
+            main {
+                mainContent()
+            }
+
+            siteFooter(context)
+        }
+}
 
 fun HEAD.property(propertyName: String, content: String) {
     meta(content = content) {
@@ -109,7 +128,9 @@ enum class Dc2fEnv(val id: String) {
         private var currentOverride: Dc2fEnv? = null
 
         var current
-            set(value) { currentOverride = value }
+            set(value) {
+                currentOverride = value
+            }
             get() = currentOverride ?: currentFromEnvironment
 
 
@@ -149,7 +170,10 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
     script(
         // TODO add support for typescript transform?
         type = ScriptType.textJavaScript,
-        src = context.getAsset("theme/script/main.js").href(RenderPath.parse("/script/"), context.renderer.urlConfig)
+        src = context.getAsset("theme/script/main.js").href(
+            RenderPath.parse("/script/"),
+            context.renderer.urlConfig
+        )
     ) {
         async = true
     }
@@ -158,11 +182,21 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
 
     website.config.favicons.map { favicon ->
         @Suppress("UnstableApiUsage")
-        when (val mediaType = MediaType.parse(favicon.image.imageInfo.mimeType).withoutParameters()) {
+        when (val mediaType = MediaType.parse(favicon.image.imageInfo.mimeType)
+            .withoutParameters()) {
             // don't ask why, but i'll prefer image/x-icon over image/vnd.microsoft.icon for now.
-            MediaType.ICO -> link(rel = "icon", type = "image/x-icon", href = favicon.image.href(context))
-            else -> link(rel = "icon", type = mediaType.toString(), href = favicon.image.href(context)) {
-                sizes = "${favicon.image.imageInfo.width}x${favicon.image.imageInfo.height}"
+            MediaType.ICO -> link(
+                rel = "icon",
+                type = "image/x-icon",
+                href = favicon.image.href(context)
+            )
+            else -> link(
+                rel = "icon",
+                type = mediaType.toString(),
+                href = favicon.image.href(context)
+            ) {
+                sizes =
+                    "${favicon.image.imageInfo.width}x${favicon.image.imageInfo.height}"
             }
         }
     }
@@ -188,10 +222,12 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
             put("@context", "http://schema.org")
             put("@type", "WebPage")
             put("headline", seo.title)
-            put("mainEntityOfPage", mapOf(
-                "@type" to "WebPage",
-                "@id" to context.href(context.node, absoluteUrl = true)
-            ))
+            put(
+                "mainEntityOfPage", mapOf(
+                    "@type" to "WebPage",
+                    "@id" to context.href(context.node, absoluteUrl = true)
+                )
+            )
             (context.node as? WithMainImage)?.mainImage()?.let { mainImage ->
                 put("image", mainImage.href(context, true))
             }
@@ -204,16 +240,23 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
             put("publisher", LinkedHashMap<String, Any>().apply {
                 put("@type", "Organization")
                 put("name", website.name)
-                put("logo", mapOf(
-                    "@type" to "ImageObject",
-                    "url" to website.config.logo?.href(context, absoluteUri = true)
-                ))
+                put(
+                    "logo", mapOf(
+                        "@type" to "ImageObject",
+                        "url" to website.config.logo?.href(
+                            context,
+                            absoluteUri = true
+                        )
+                    )
+                )
             })
-            (context.node as? WithAuthor)?.author ?.let { author ->
-                put("author", mapOf(
-                    "@type" to "Person",
-                    "name" to author
-                ))
+            (context.node as? WithAuthor)?.author?.let { author ->
+                put(
+                    "author", mapOf(
+                        "@type" to "Person",
+                        "name" to author
+                    )
+                )
             }
             put("description", seo.description)
         }

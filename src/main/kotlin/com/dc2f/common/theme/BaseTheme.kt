@@ -4,7 +4,7 @@ import com.dc2f.common.contentdef.*
 import com.dc2f.render.*
 import kotlinx.html.*
 
-open class BaseTheme : Theme() {
+open class BaseTheme : Theme(), BaseTemplateForTheme {
     override fun configure(config: ThemeConfig) {
         baseTheme()
     }

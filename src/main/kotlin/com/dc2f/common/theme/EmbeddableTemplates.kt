@@ -58,3 +58,8 @@ fun FlowOrInteractiveOrPhrasingContent.img(context: RenderContext<*>, image: Ima
     }
 }
 
+data class Resize(
+    override val width: Int? = null,
+    override val height: Int? = null,
+    override val fillType: FillType? = null
+) : ResizeConfig
