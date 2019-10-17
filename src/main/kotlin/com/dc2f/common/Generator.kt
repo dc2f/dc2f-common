@@ -201,11 +201,12 @@ open class GeneratorDc2fConfig<ROOT_CONTENT : com.dc2f.Website<*>>(
      * Optional base directory for assets, only used during
      * [Serve]
      */
-    val assetBaseDirectory: String?
+    assetBaseDirectory: String
 ) : Dc2fConfig<ROOT_CONTENT>(
     contentDirectory,
     staticDirectory,
-    rootContentType,
-    urlConfigFromRootContent,
-    theme
+    assetBaseDirectory = assetBaseDirectory,
+    rootContentType = rootContentType,
+    urlConfigFromRootContent = urlConfigFromRootContent,
+    theme = theme
 )

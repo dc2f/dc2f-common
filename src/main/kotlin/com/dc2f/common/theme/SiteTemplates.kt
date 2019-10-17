@@ -12,7 +12,7 @@ import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
-interface BaseTemplateForTheme : ThemeMarker {
+interface BaseTemplateForTheme : ThemeMarker, ScaffoldTheme {
 
     open fun <T> baseTemplateNavBar(
         tc: TagConsumer<T>,
@@ -82,25 +82,26 @@ interface BaseTemplateForTheme : ThemeMarker {
         }
     }
 
-    open fun <T> TagConsumer<T>.baseTemplateImpl(
+    open fun <T> baseTemplate(
+        tc: TagConsumer<T>,
         context: RenderContext<*>,
         seo: PageSeo,
         headInject: HEAD.() -> Unit = {},
         navbarMenuOverride: (DIV.() -> Unit)? = null,
-        mainContent: MAIN.() -> Unit
+        mainContent: DIV.() -> Unit
     ) =
-        scaffold(context, seo, headInject) {
+        scaffold(tc, context, seo, headInject) {
             val website = context.rootNode as BaseWebsite
             nav("main-navbar navbar has-shadow is-spaced is-fixed-top") {
                 role = "navigation"
                 attributes["aria-label"] = "main navigation"
                 div("container") {
-                    baseTemplateNavBar(this@baseTemplateImpl, context, website, navbarMenuOverride)
+                    baseTemplateNavBar(tc, context, website, navbarMenuOverride)
                 }
             }
 
             main {
-                mainContent()
+                div { mainContent() }
             }
 
             siteFooter(context)
@@ -160,7 +161,7 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
                 ScssTransformer(
                     includePaths = listOf(
                         File("."),
-                        File(context.getResourceFromFileSystem("theme/scss/"))
+                        File(context.getAssetFromFileSystem("theme/scss/"))
                     )
                 )
             ).transform(digest)
@@ -334,22 +335,27 @@ fun BODY.siteFooter(context: RenderContext<*>) {
     }
 }
 
-fun <T> TagConsumer<T>.scaffold(
-    context: RenderContext<*>,
-    seo: PageSeo,
-    headInject: HEAD.() -> Unit = {},
-    body: BODY.() -> Unit
-) =
-    document {
+interface ScaffoldTheme {
 
-        html {
-            lang = "en-us"
-            head {
-                siteHead(context, seo)
-                headInject()
-            }
-            body("has-navbar-fixed-top has-spaced-navbar-fixed-top") {
-                body()
+    fun <T> scaffold(
+        tc: TagConsumer<T>,
+        context: RenderContext<*>,
+        seo: PageSeo,
+        headInject: HEAD.() -> Unit = {},
+        body: BODY.() -> Unit
+    ) =
+        // TODO: is this document actually ever used?!
+        document {
+
+            tc.html {
+                lang = "en-us"
+                head {
+                    siteHead(context, seo)
+                    headInject()
+                }
+                body("has-navbar-fixed-top has-spaced-navbar-fixed-top") {
+                    body()
+                }
             }
         }
-    }
+}

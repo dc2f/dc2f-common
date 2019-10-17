@@ -10,7 +10,8 @@ import kotlinx.html.*
 fun BaseTheme.landingPageTemplates() {
 
     config.pageRenderer<LandingPage> {
-        appendHTML().baseTemplate(
+        baseTemplate(
+            appendHTML(),
             this,
             node.seo
         ) {

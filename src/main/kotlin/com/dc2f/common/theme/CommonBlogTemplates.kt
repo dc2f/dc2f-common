@@ -8,7 +8,7 @@ import java.time.format.*
 fun BaseTheme.commonBlogTemplates() {
     config.pageRenderer<Blog> {
         renderChildren(node.children)
-        appendHTML().baseTemplate(this, node.seo) {
+        baseTemplate(appendHTML(), this, node.seo) {
             div("container") {
                 div("section has-text-centered") {
                     h1("title") { +node.seo.title }
@@ -63,7 +63,7 @@ fun BaseTheme.commonBlogTemplates() {
 
 
     config.pageRenderer<Article> {
-        appendHTML().baseTemplate(this, node.seo) {
+        baseTemplate(appendHTML(), this, node.seo) {
             div("hero is-medium has-bg-img") {
                 div("bg-image") {
                     // TODO image resize and blur

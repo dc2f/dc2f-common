@@ -31,23 +31,16 @@ open class BaseTheme : Theme(), BaseTemplateForTheme {
 
     }
 
-    open fun <T> TagConsumer<T>.baseTemplate(
-        context: RenderContext<*>,
-        seo: PageSeo,
-        headInject: HEAD.() -> Unit = {},
-        navbarMenuOverride: (DIV.() -> Unit)? = null,
-        mainContent: MAIN.() -> Unit
-    ) = baseTemplateImpl(context, seo, headInject, navbarMenuOverride, mainContent)
-
     @SuppressWarnings("unused")
     fun <TAG, T : WithPageSeo> TagConsumer<TAG>.baseTemplate(
         context: RenderContext<T>,
         headInject: HEAD.() -> Unit = {},
-        mainContent: MAIN.() -> Unit
-    ) = baseTemplate(context, context.node.seo, headInject, mainContent = mainContent)
+        mainContent: DIV.() -> Unit
+    ) = baseTemplate(this, context, context.node.seo, headInject, mainContent = mainContent)
 
     private fun RenderContext<ContentPage>.contentPage() {
-        appendHTML().baseTemplate(
+        baseTemplate(
+            appendHTML(),
             this,
             node.seo
         ) {
