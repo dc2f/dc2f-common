@@ -60,7 +60,7 @@ open class BaseTheme : Theme(), BaseTemplateForTheme {
     }
 
     private fun RenderContext<HtmlPage>.htmlPage() {
-        appendHTML().baseTemplate(context, headInject = { richText(context, node.head) }) {
+        baseTemplate(appendHTML(), context, headInject = { richText(context, node.head) }, seo = node.seo) {
             if (node.renderOnlyHtml == true) {
                 requireNotNull(node.html) { "renderOnlyHtml was defined true, but no html attribute was found."}
                 richText(context, node.html)
