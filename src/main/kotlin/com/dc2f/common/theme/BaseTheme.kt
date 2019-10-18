@@ -1,8 +1,12 @@
 package com.dc2f.common.theme
 
+import com.dc2f.*
 import com.dc2f.common.contentdef.*
 import com.dc2f.render.*
+import com.rometools.rome.feed.synd.*
+import com.rometools.rome.io.SyndFeedOutput
 import kotlinx.html.*
+import java.util.*
 
 open class BaseTheme : Theme(), BaseTemplateForTheme {
     override fun configure(config: ThemeConfig) {
@@ -11,6 +15,7 @@ open class BaseTheme : Theme(), BaseTemplateForTheme {
 
     fun baseTheme() {
         robotsTxt()
+        rssFeed()
         config.pageRenderer<BaseWebsite> {
             renderChildren(node.children)
             createSubContext(node.index, out, enclosingNode = null).render()
@@ -100,4 +105,26 @@ fun Theme.robotsTxt() {
             out.appendln("Disallow: /")
         }
     }
+}
+
+fun Theme.rssFeed() {
+    config.pageRenderer<Blog>(OutputType.rssFeed) {
+//        node.children
+        val feed = SyndFeedImpl()
+        feed.feedType = "rss_1.0"
+        feed.title = node.seo.title
+        feed.description = node.seo.description
+        feed.link = href(node, true)
+        feed.entries = node.children.map { article ->
+            SyndEntryImpl().apply {
+                title = article.title
+                publishedDate = Date.from(article.date.toInstant())
+                link = href(article, true)
+            }
+        }
+        out.appendln(SyndFeedOutput().outputString(feed))
+    }
+    config.pageRenderer<BaseWebsite>(OutputType.rssFeed) { renderChildren(node.children) }
+    config.pageRenderer<ContentPageFolder>(OutputType.rssFeed) { renderChildren(node.children) }
+    config.pageRenderer<ContentDef>(OutputType.rssFeed) { }
 }

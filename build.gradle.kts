@@ -44,6 +44,9 @@ dependencies {
 
     implementation("com.swoval:file-tree-views:2.1.3")
 
+    // rss feeds for blog
+    implementation("com.rometools:rome:1.12.2")
+
     api("com.dc2f:dc2f:$version")
     api("com.dc2f:dc2f-edit-api:$version")
 
