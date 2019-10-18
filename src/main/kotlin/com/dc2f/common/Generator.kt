@@ -36,6 +36,7 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
             FileSystems.getDefault().getPath(config.contentDirectory),
             staticRoot = config.staticDirectory
         )
+
         watchForChanges2(config)
 //        EditApi(
 //            config
