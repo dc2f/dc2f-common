@@ -154,6 +154,10 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
 
     meta(charset = "UTF-8")
 
+    link(rel = "canonical") {
+        href = context.href(context.node, true)
+    }
+
     link(rel = LinkRel.stylesheet.toLowerCase()) {
         val digest = DigestTransformer()
         href = context.getAsset("theme/scss/main.scss")
