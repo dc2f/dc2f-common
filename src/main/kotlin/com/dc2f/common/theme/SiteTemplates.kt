@@ -289,7 +289,7 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
 
 }
 
-private fun MenuEntry.href(context: RenderContext<*>): String? =
+public fun MenuEntry.href(context: RenderContext<*>): String? =
     this.ref?.href(context) ?: this.url
 
 fun BODY.siteFooter(context: RenderContext<*>) {
