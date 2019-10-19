@@ -11,7 +11,7 @@ fun BaseTheme.landingPageTemplates() {
 
     config.pageRenderer<LandingPage> {
         baseTemplate(
-            appendHTML(),
+            appendHtmlDocument(),
             this,
             node.seo
         ) {

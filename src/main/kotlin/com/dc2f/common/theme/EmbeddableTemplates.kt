@@ -9,9 +9,9 @@ fun Theme.embeddable() {
     // TODO maybe create a custom variant to register embeddable figures?
     config.pageRenderer<FigureEmbeddable> {
         if (node.inlineImage) {
-            appendHTML().img { renderFigureImage(context) }
+            appendHtmlPartial().img { renderFigureImage(context) }
         } else {
-            appendHTML().figure {
+            appendHtmlPartial().figure {
                 img { renderFigureImage(context) }
                 node.title?.let { title ->
                     figcaption {
