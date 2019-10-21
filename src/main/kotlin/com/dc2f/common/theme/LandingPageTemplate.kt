@@ -89,25 +89,34 @@ fun BaseTheme.landingPageTemplates() {
 //                                        }
                                         }
                                         div("column is-7") {
-                                            // TODO add image resizing/optimization stuff
-                                            child.screenshot.resize(
-                                                context,
-                                                1200,
-                                                Int.MAX_VALUE,
-                                                FillType.Fit
-                                            ).let { image ->
+//                                            // TODO add image resizing/optimization stuff
+//                                            child.screenshot.resize(
+//                                                context,
+//                                                1200,
+//                                                Int.MAX_VALUE,
+//                                                FillType.Fit
+//                                            ).let { image ->
                                                 figure("image screenshot") {
                                                     attributes["data-aos"] = "fade-up"
                                                     attributes["data-name"] = child.screenshot.name
-                                                    img {
-                                                        src = image.href
-                                                        // DIFF for compatibility. but maybe we should use child.title instead of file name.
-//                                                    alt = child.title
-                                                        alt = child.screenshot.name
-                                                        width = image.width.toString()
-                                                        height = image.height.toString()
-                                                    }
-                                                }
+                                                    imageAsPicture(
+                                                        context,
+                                                        alt = child.screenshot.name,
+                                                        asset = child.screenshot,
+                                                        resize = Resize(
+                                                            width = 1200,
+                                                            fillType = FillType.Fit
+                                                        )
+                                                    )
+//                                                    img {
+//                                                        src = image.href
+//                                                        // DIFF for compatibility. but maybe we should use child.title instead of file name.
+////                                                    alt = child.title
+//                                                        alt = child.screenshot.name
+//                                                        width = image.width.toString()
+//                                                        height = image.height.toString()
+//                                                    }
+//                                                }
                                             }
                                         }
                                     }

@@ -9,13 +9,15 @@ fun Theme.embeddable() {
     // TODO maybe create a custom variant to register embeddable figures?
     config.pageRenderer<FigureEmbeddable> {
         if (node.inlineImage) {
-            appendHtmlPartial().img { renderFigureImage(context) }
+            appendHtmlPartial { renderFigureImage(context) }
         } else {
-            appendHtmlPartial().figure {
-                img { renderFigureImage(context) }
-                node.title?.let { title ->
-                    figcaption {
-                        h4 { +title }
+            appendHtmlPartial {
+                figure {
+                    renderFigureImage(context)
+                    node.title?.let { title ->
+                        figcaption {
+                            h4 { +title }
+                        }
                     }
                 }
             }
@@ -25,41 +27,42 @@ fun Theme.embeddable() {
 }
 
 
-private fun IMG.renderFigureImage(
+private fun HTMLTag.renderFigureImage(
     context: RenderContext<FigureEmbeddable>
 ) {
-    renderImg(context, context.node.image, context.node.resize)
-    alt = context.node.alt ?: context.node.title ?: ""
-//                        width = "200"//child.screenshot.width.toString()
-//                        height = "200"//child.screenshot.height.toString()
+    renderImg(context, context.node.image, context.node.resize, alt = context.node.alt ?: context.node.title ?: "")
 }
 
-fun IMG.renderImg(context: RenderContext<*>, image: ImageAsset, resize: ResizeConfig?) {
-    resize?.let {
-        val resized = image.resize(
+fun HTMLTag.renderImg(context: RenderContext<*>, image: ImageAsset, resize: ResizeConfig?, alt: String? = null, block: IMG.() -> Unit = {}) {
+//    resize?.let {
+        imageAsPicture(
             context,
-            resize.width ?: Int.MAX_VALUE,
-            resize.height ?: Int.MAX_VALUE,
-            fillType = resize.fillType ?: FillType.Cover
+            image,
+            alt,
+            resize,
+            block
         )
-        src = resized.href
-        width = resized.width.toString()
-        height = resized.height.toString()
-    } ?: run {
-        src = image.href(context)
-    }
+//        val resized = image.resize(
+//            context,
+//            resize.width ?: Int.MAX_VALUE,
+//            resize.height ?: Int.MAX_VALUE,
+//            fillType = resize.fillType ?: FillType.Cover
+//        )
+//        src = resized.href
+//        width = resized.width.toString()
+//        height = resized.height.toString()
+//    } ?: run {
+//        src = image.href(context)
+//    }
 }
 
 
-fun FlowOrInteractiveOrPhrasingContent.img(context: RenderContext<*>, image: ImageAsset, resize: ResizeConfig?, block : IMG.() -> Unit = {}) {
-    img {
-        renderImg(context, image, resize)
-        block()
-    }
+fun HTMLTag.img(context: RenderContext<*>, image: ImageAsset, resize: ResizeConfig?, block : IMG.() -> Unit = {}) {
+    renderImg(context, image, resize, block = block)
 }
 
 data class Resize(
     override val width: Int? = null,
     override val height: Int? = null,
-    override val fillType: FillType? = null
+    override val fillType: FillType = FillType.Cover
 ) : ResizeConfig

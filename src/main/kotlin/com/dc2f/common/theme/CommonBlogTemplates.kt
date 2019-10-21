@@ -1,7 +1,8 @@
 package com.dc2f.common.theme
 
-import com.dc2f.FillType
+import com.dc2f.*
 import com.dc2f.common.contentdef.*
+import com.dc2f.render.RenderContext
 import kotlinx.html.*
 import java.time.format.*
 
@@ -20,16 +21,8 @@ fun BaseTheme.commonBlogTemplates() {
                                 div("column") {
                                     a(context.href(child)) {
                                         figure("image is-3by2") {
-                                            img("Teaser image") {
+                                            imageAsPicture(context, child.teaser, "Teaser image", Resize(480, 320, FillType.Cover)) {
                                                 style = "max-width: 100%; height: auto;"
-                                                src = child.teaser.resize(
-                                                    context,
-                                                    480,
-                                                    320,
-                                                    FillType.Cover
-                                                ).href
-                                                width = 480.toString()
-                                                height = 320.toString()
                                             }
                                         }
                                     }
@@ -95,3 +88,48 @@ fun BaseTheme.commonBlogTemplates() {
     }
 }
 
+fun HTMLTag.imageAsPicture(context: RenderContext<*>, asset: ImageAsset, alt: String?, resize: ResizeConfig?, block: IMG.() -> Unit = { }) {
+    dc2fpicture {
+        asset.transform(
+            context,
+            resize?.width ?: Integer.MAX_VALUE,
+            resize?.height ?: Integer.MAX_VALUE,
+            resize?.fillType ?: FillType.NoResize
+        ).also { teaser ->
+            teaser.sources.map { imageSource ->
+                dc2fsource {
+                    attributes["srcset"] = imageSource.href
+                    attributes["type"] = imageSource.type
+                }
+            }
+            img(alt) {
+                block()
+                src = teaser.image.href
+                width = teaser.image.width.toString()
+                height = teaser.image.height.toString()
+            }
+        }
+
+    }
+}
+
+
+
+class DC2FPICTURE(consumer: TagConsumer<*>) :
+    HTMLTag("picture", consumer, emptyMap(),
+        inlineTag = true,
+        emptyTag = false), HtmlInlineTag {
+}
+
+fun HTMLTag.dc2fpicture(block: DC2FPICTURE.() -> Unit = {}) {
+    DC2FPICTURE(consumer).visit(block)
+}
+
+class DC2FSOURCE(consumer: TagConsumer<*>) :
+    HTMLTag("source", consumer, emptyMap(),
+        inlineTag = true,
+        emptyTag = false), HtmlInlineTag {
+}
+fun HTMLTag.dc2fsource(block: DC2FSOURCE.() -> Unit = {}) {
+    DC2FSOURCE(consumer).visit(block)
+}
