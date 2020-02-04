@@ -3,6 +3,7 @@ package com.dc2f.common.theme
 import com.dc2f.*
 import com.dc2f.common.contentdef.*
 import com.dc2f.render.*
+import com.dc2f.util.*
 import kotlinx.html.*
 
 fun Theme.embeddable() {
@@ -35,6 +36,12 @@ private fun HTMLTag.renderFigureImage(
 
 fun HTMLTag.renderImg(context: RenderContext<*>, image: ImageAsset, resize: ResizeConfig?, alt: String? = null, block: IMG.() -> Unit = {}) {
 //    resize?.let {
+    if (image.imageInfo.isSvg && resize == null && this is FlowOrInteractiveOrPhrasingContent ) {
+        img {
+            block()
+            src = image.href(context)
+        }
+    } else {
         imageAsPicture(
             context,
             image,
@@ -42,6 +49,7 @@ fun HTMLTag.renderImg(context: RenderContext<*>, image: ImageAsset, resize: Resi
             resize,
             block
         )
+    }
 //        val resized = image.resize(
 //            context,
 //            resize.width ?: Int.MAX_VALUE,
