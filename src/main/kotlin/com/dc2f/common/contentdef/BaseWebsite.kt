@@ -108,7 +108,11 @@ interface BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithCont
 }
 
 @Nestable("folder")
-interface ContentPageFolder : WebsiteFolderContent, ContentBranchDef<WebsiteFolderContent>
+interface ContentPageFolder : WebsiteFolderContent, ContentBranchDef<WebsiteFolderContent> {
+    @JvmDefault
+    override fun includeInSitemap(): Boolean =
+      index != null && super.includeInSitemap()
+}
 
 @Nestable("content")
 interface ContentPage : ContentDef, WebsiteFolderContent, WithPageSeo {
