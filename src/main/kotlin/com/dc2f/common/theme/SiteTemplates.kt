@@ -174,13 +174,17 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
     }
     script(
         // TODO add support for typescript transform?
-        type = ScriptType.textJavaScript,
-        src = context.getAsset("theme/script/main.js").href(
+        type = ScriptType.textJavaScript
+    ) {
+        val digest = DigestTransformer()
+        src = context.getAsset("theme/script/main.js")
+          .transform(digest)
+          .href(
             RenderPath.parse("/script/"),
             context.renderer.urlConfig
-        )
-    ) {
+          )
         async = true
+        integrity = requireNotNull(digest.value?.integrityAttrValue)
     }
 
     meta("viewport", "width=device-width, initial-scale=1")
