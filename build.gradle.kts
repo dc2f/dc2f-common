@@ -9,7 +9,7 @@ if (version == "unspecified") {
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.3.41"
+    kotlin("jvm") version "1.4.0"
 
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
@@ -50,7 +50,7 @@ dependencies {
     api("com.dc2f:dc2f:$version")
     api("com.dc2f:dc2f-edit-api:$version")
 
-    implementation("com.github.vishna:watchservice-ktx:master-SNAPSHOT")
+//    implementation("com.github.vishna:watchservice-ktx:master-SNAPSHOT")
 
 
     // Use the Kotlin test library.
