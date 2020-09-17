@@ -3,20 +3,27 @@ package com.dc2f.common
 import com.dc2f.api.edit.EditApiConfig
 import com.dc2f.api.edit.ratpack.RatpackDc2fServer
 import com.dc2f.common.theme.Dc2fEnv
-import com.dc2f.render.*
+import com.dc2f.render.Theme
+import com.dc2f.render.UrlConfig
 import com.dc2f.util.Dc2fConfig
-import com.github.ajalt.clikt.core.*
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.option
-import com.github.ajalt.clikt.parameters.types.*
-import com.swoval.files.*
+import com.github.ajalt.clikt.parameters.types.enum
+import com.github.ajalt.clikt.parameters.types.int
+import com.swoval.files.FileTreeViews
+import com.swoval.files.PathWatchers
 import com.swoval.functional.Either
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import mu.KotlinLogging
 import org.apache.commons.io.FileUtils
-import java.io.*
-import java.nio.file.*
+import java.io.File
+import java.io.IOException
+import java.nio.file.FileSystems
+import java.nio.file.Path
 import java.util.*
+import kotlin.concurrent.write
 import kotlin.reflect.KClass
 
 private val logger = KotlinLogging.logger {}
@@ -62,15 +69,17 @@ class Serve<ROOT_CONTENT : com.dc2f.Website<*>>(
             override fun onNext(t: PathWatchers.Event) {
                 logger.debug { "Detected path $t change ${t.typedPath.path}" }
                 runBlocking {
-                    if (assetPath != null) {
-                        logger.debug { "vs. $assetPath" }
-                        if (t.typedPath.path.startsWith(assetPath)) {
-                            config.deps.context.imageCache.assetPipelineCache.clear()
-                            logger.debug { "Done clearing asset cache." }
-                            config.deps.triggerRefreshListeners()
+                    config.deps.refreshLock.write {
+                        if (assetPath != null) {
+                            logger.debug { "vs. $assetPath" }
+                            if (t.typedPath.path.startsWith(assetPath)) {
+                                config.deps.context.imageCache.assetPipelineCache.clear()
+                                logger.debug { "Done clearing asset cache." }
+                                config.deps.triggerRefreshListeners()
+                            }
                         }
+                        pathChanged(config, t.typedPath.path)
                     }
-                    pathChanged(config, t.typedPath.path)
                 }
             }
 
