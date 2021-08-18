@@ -104,7 +104,7 @@ fun BaseTheme.landingPageTemplates() {
                                                         alt = child.screenshot.name,
                                                         asset = child.screenshot,
                                                         resize = Resize(
-                                                            width = 1200,
+                                                            width = 1500,
                                                             fillType = FillType.Fit
                                                         )
                                                     )
