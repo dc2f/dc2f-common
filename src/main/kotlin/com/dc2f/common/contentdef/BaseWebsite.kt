@@ -73,6 +73,10 @@ interface BaseConfig : ContentDef {
      * their own -- the landing page, index pages, etc. Kept separate from
      * [logo] because a social card is usually not the logo, and because
      * og:image needs a raster format where a logo is often SVG.
+     *
+     * When unset, [logo] is used instead. Prefer setting this explicitly: an
+     * SVG logo cannot serve as an og:image, since the crawlers do not render
+     * SVG.
      */
     val socialImage: ImageAsset?
 }

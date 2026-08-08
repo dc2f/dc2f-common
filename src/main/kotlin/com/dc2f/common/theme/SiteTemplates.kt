@@ -292,8 +292,11 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
 
     // Articles use their own image; everything else falls back to the site's
     // social image, so the landing page is no longer shared as a bare link.
+    // The logo is a last resort -- a branded card beats no card at all, and it
+    // means sites that never set socialImage still get one.
     val socialImage = article?.let { it.mainImage() ?: it.teaser }
         ?: website.config.socialImage
+        ?: website.config.logo
 
     if (socialImage != null) {
         property("og:image", socialImage.href(context, absoluteUri = true))
@@ -303,11 +306,14 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
     }
 
     // twitter:card was never emitted, so X rendered no card at all -- not even
-    // on articles that had an og:image. Wide images get the big card; squarer
-    // ones would be centre-cropped by it, so they get the thumbnail card.
-    val isWide = socialImage != null &&
+    // on articles that had an og:image. The big card needs an image that is
+    // both wide and at least 300x157, which is what X requires for it; a
+    // squarer one would be centre-cropped and a smaller one is rejected
+    // outright, so both fall back to the thumbnail card.
+    val fitsLargeCard = socialImage != null &&
+        socialImage.width >= 300 && socialImage.height >= 157 &&
         socialImage.width.toDouble() / socialImage.height >= 1.5
-    twitterProperty("twitter:card", if (isWide) "summary_large_image" else "summary")
+    twitterProperty("twitter:card", if (fitsLargeCard) "summary_large_image" else "summary")
 
 //    meta(content = "text/html;charset=utf-8") {
 //        httpEquiv = MetaHttpEquiv.contentType
