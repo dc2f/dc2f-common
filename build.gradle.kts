@@ -42,7 +42,10 @@ dependencies {
     implementation("com.github.ajalt:clikt:2.2.0")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.9.9")
 
-    implementation("com.swoval:file-tree-views:2.1.3")
+    // 2.1.3's bundled dylib is x86_64 only, so `serve` died with an
+    // UnsatisfiedLinkError on Apple Silicon. 2.1.12 ships a universal binary
+    // (still under native/x86_64/, misleadingly, but it contains arm64).
+    implementation("com.swoval:file-tree-views:2.1.12")
 
     // rss feeds for blog
     implementation("com.rometools:rome:1.12.2")
