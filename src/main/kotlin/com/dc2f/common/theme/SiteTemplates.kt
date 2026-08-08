@@ -236,7 +236,7 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
         website.createLinkedData(context)
     } else {
         LinkedHashMap<String, Any>().apply {
-            put("@context", "http://schema.org")
+            put("@context", "https://schema.org")
             put("@type", "WebPage")
             put("headline", seo.title)
             put(
@@ -257,15 +257,17 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
             put("publisher", LinkedHashMap<String, Any>().apply {
                 put("@type", "Organization")
                 put("name", website.name)
-                put(
-                    "logo", mapOf(
-                        "@type" to "ImageObject",
-                        "url" to website.config.logo?.href(
-                            context,
-                            absoluteUri = true
+                // Only when there is a logo: an ImageObject carrying a null
+                // url is invalid structured data, which is what sites without
+                // config.logo were emitting on every inner page.
+                website.config.logo?.href(context, absoluteUri = true)?.let { logoUrl ->
+                    put(
+                        "logo", mapOf(
+                            "@type" to "ImageObject",
+                            "url" to logoUrl
                         )
                     )
-                )
+                }
             })
             (context.node as? WithAuthor)?.author?.let { author ->
                 put(
