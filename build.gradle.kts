@@ -9,7 +9,7 @@ if (version == "unspecified") {
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    kotlin("jvm") version "1.9.25"
+    kotlin("jvm") version "2.4.10"
 
     // Apply the java-library plugin for API and implementation separation.
     `java-library`
@@ -18,9 +18,8 @@ plugins {
 }
 
 repositories {
-    // Use jcenter for resolving dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    jcenter()
+    // jcenter() dropped: shut down in 2021 and removed in Gradle 9.
+    mavenCentral()
     maven("https://oss.sonatype.org/content/groups/public/")
     maven("https://jitpack.io")
 
@@ -63,16 +62,21 @@ dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit")
 }
 
-val compileKotlin by tasks.getting(KotlinCompile::class) {
-    kotlinOptions {
-        kotlinOptions.jvmTarget = "1.8"
-        // "-Xjvm-default=enable" was removed in Kotlin 1.5 ("all" replaces it).
-        // "-Xuse-experimental" went in 1.6 and kotlin.Experimental itself in 1.9
-        // -- RequiresOptIn is stable now, so the flag is simply dropped.
-        freeCompilerArgs = listOf(
-            "-Xjvm-default=all"
-        )
+tasks.withType<KotlinCompile> {
+    // kotlinOptions was removed in Kotlin 2.2; compilerOptions replaces it, and
+    // -Xjvm-default became -jvm-default ("no-compatibility" == the old "all").
+    // "-Xuse-experimental" went in 1.6 and kotlin.Experimental itself in 1.9 --
+    // RequiresOptIn is stable now, so that flag stays dropped.
+    compilerOptions {
+        freeCompilerArgs.add("-jvm-default=no-compatibility")
     }
+}
+
+// Pins both the Java and Kotlin targets together. Setting only
+// compilerOptions.jvmTarget lets compileJava follow whatever JDK is running and
+// Gradle then rejects the mismatch. Gradle 9 requires JDK 17 to run anyway.
+kotlin {
+    jvmToolchain(17)
 }
 
 

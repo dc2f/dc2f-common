@@ -166,7 +166,9 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
         href = context.href(context.node, true)
     }
 
-    link(rel = LinkRel.stylesheet.toLowerCase()) {
+    // toLowerCase() is an error-level deprecation from Kotlin 2.x; lowercase()
+    // is locale-independent, which is what we want for an HTML attribute.
+    link(rel = LinkRel.stylesheet.lowercase()) {
         val digest = DigestTransformer()
         href = context.getAsset("theme/scss/main.scss")
             .transform(
