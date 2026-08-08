@@ -27,14 +27,11 @@ interface WebsiteFolderContent : ContentDef, SlugCustomization, WithRedirect, Wi
 
     val renderPathAliases: ArrayList<String>?
 
-    @JvmDefault
     override fun contentSymlink(): ContentDef? = index
 
-    @JvmDefault
     override fun includeInSitemap(): Boolean =
         includeInSitemap ?: super.includeInSitemap()
 
-    @JvmDefault
     override fun renderPathAliases(renderer: Renderer): List<RenderPath>? =
         renderPathAliases?.map { RenderPath.parseLeafPath(it) }
 }
@@ -93,10 +90,8 @@ interface BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithCont
     /** Allows adding additional tags inside <head></head> (e.g. for analytics) */
     abstract val headInject: String?
 
-    @JvmDefault
     override fun contentSymlink(): ContentDef? = index
 
-    @JvmDefault
     open fun createLinkedData(context: RenderContext<*>): Map<String, Any?>? = mapOf(
         "@context" to "http://schema.org",
         "@type" to "Product",
@@ -109,7 +104,6 @@ interface BaseWebsite : Website<WebsiteFolderContent>, WithSitemapInfo, WithCont
 
 @Nestable("folder")
 interface ContentPageFolder : WebsiteFolderContent, ContentBranchDef<WebsiteFolderContent> {
-    @JvmDefault
     override fun includeInSitemap(): Boolean =
       index != null && super.includeInSitemap()
 }
@@ -136,7 +130,6 @@ interface HtmlPage : ContentPage, WithRenderPathOverride {
     var renderOnlyHtml: Boolean?
     var renderPath: String?
 
-    @JvmDefault
     override fun renderPath(renderer: Renderer): RenderPath? =
         renderPath?.let { RenderPath.parseLeafPath(it) }
 

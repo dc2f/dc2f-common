@@ -40,17 +40,13 @@ interface Article : ContentDef, SlugCustomization, WithAuthor,
     var mainImageOverride: ImageAsset?
     var renderPath: String?
 
-    @JvmDefault
     override fun slugGenerationValue(): String? = title
 
-    @JvmDefault
     override fun wordCount(): Int? =
         countWords(body.rawContent)
 
-    @JvmDefault
     override fun mainImage(): ImageAsset? = mainImageOverride ?: teaser
 
-    @JvmDefault
     override fun renderPath(renderer: Renderer): RenderPath? =
         renderPath?.let { RenderPath.parseLeafPath(it) }
 }
