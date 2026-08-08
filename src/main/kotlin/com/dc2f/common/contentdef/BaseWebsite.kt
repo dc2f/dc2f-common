@@ -67,6 +67,14 @@ interface BaseConfig : ContentDef {
     val favicons: List<Favicon>
     val url: UrlConfig
     val logo: ImageAsset?
+
+    /**
+     * Fallback image for og:image/twitter:image on pages that have no image of
+     * their own -- the landing page, index pages, etc. Kept separate from
+     * [logo] because a social card is usually not the logo, and because
+     * og:image needs a raster format where a logo is often SVG.
+     */
+    val socialImage: ImageAsset?
 }
 
 interface NavBar : ContentDef {

@@ -114,6 +114,14 @@ fun HEAD.property(propertyName: String, content: String) {
     }
 }
 
+/**
+ * OpenGraph is defined in terms of the `property` attribute, but the Twitter
+ * card spec documents `name`. Emit each in the form its own spec asks for.
+ */
+fun HEAD.twitterProperty(propertyName: String, content: String) {
+    meta(name = propertyName, content = content)
+}
+
 enum class Dc2fEnv(val id: String) {
     Production("production"),
     @Suppress("unused")
@@ -214,7 +222,7 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
         // DIFF we should probably not support empty descriptions.
         meta(name = "description", content = seo.description)
         property("og:description", seo.description)
-        property("twitter:description", seo.description)
+        twitterProperty("twitter:description", seo.description)
     }
 
     property("og:url", context.href(context.node, true))
@@ -276,14 +284,28 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
         }
     }
 
-    (context.node as? Article)?.let { article ->
-        val image = article.mainImage() ?: article.teaser
-        property("og:image", image.href(context, absoluteUri = true))
-        property("og:image:width", image.width.toString())
-        property("og:image:height", image.height.toString())
-        property("twitter:image", image.href(context, absoluteUri = true))
-        property("og:type", "article")
+    val article = context.node as? Article
+    property("og:type", if (article != null) "article" else "website")
+    property("og:site_name", website.name)
+
+    // Articles use their own image; everything else falls back to the site's
+    // social image, so the landing page is no longer shared as a bare link.
+    val socialImage = article?.let { it.mainImage() ?: it.teaser }
+        ?: website.config.socialImage
+
+    if (socialImage != null) {
+        property("og:image", socialImage.href(context, absoluteUri = true))
+        property("og:image:width", socialImage.width.toString())
+        property("og:image:height", socialImage.height.toString())
+        twitterProperty("twitter:image", socialImage.href(context, absoluteUri = true))
     }
+
+    // twitter:card was never emitted, so X rendered no card at all -- not even
+    // on articles that had an og:image. Wide images get the big card; squarer
+    // ones would be centre-cropped by it, so they get the thumbnail card.
+    val isWide = socialImage != null &&
+        socialImage.width.toDouble() / socialImage.height >= 1.5
+    twitterProperty("twitter:card", if (isWide) "summary_large_image" else "summary")
 
 //    meta(content = "text/html;charset=utf-8") {
 //        httpEquiv = MetaHttpEquiv.contentType
