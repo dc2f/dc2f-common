@@ -1,8 +1,10 @@
 package com.dc2f.common.theme
 
+import com.dc2f.*
 import com.dc2f.assets.*
 import com.dc2f.common.contentdef.*
 import com.dc2f.render.*
+import com.dc2f.util.*
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.net.MediaType
 import kotlinx.html.*
@@ -11,6 +13,13 @@ import mu.KotlinLogging
 import java.io.File
 
 private val logger = KotlinLogging.logger {}
+
+/**
+ * Longest edge of the image served as og:image/twitter:image. X renders the
+ * large card at 1200px wide, so anything above this is downloaded by every
+ * crawler and then thrown away.
+ */
+private const val SOCIAL_IMAGE_MAX_EDGE = 1200
 
 interface BaseTemplateForTheme : ThemeMarker, ScaffoldTheme {
 
@@ -300,21 +309,43 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
         ?: website.config.socialImage
         ?: website.config.logo
 
-    if (socialImage != null) {
-        property("og:image", socialImage.href(context, absoluteUri = true))
-        property("og:image:width", socialImage.width.toString())
-        property("og:image:height", socialImage.height.toString())
-        twitterProperty("twitter:image", socialImage.href(context, absoluteUri = true))
+    // Serve the card a resized copy rather than the original. A crawler fetches
+    // og:image on every share, and an original straight off a camera or an image
+    // generator is easily several megabytes -- X caps it at 5MB and silently
+    // drops anything it cannot fetch in time. Fit never upscales, so an image
+    // already below the limit passes through untouched. Animated gifs keep the
+    // original, same as in [ImageAsset.transform], and so does SVG -- neither
+    // survives ImageIO, and the logo fallback below is frequently an SVG.
+    val card = socialImage?.let { image ->
+        if (image.imageInfo.isAnimatedGif || image.imageInfo.isSvg) {
+            ResizedImage(image.href(context, absoluteUri = true), image.width, image.height)
+        } else {
+            image.resize(
+                context,
+                SOCIAL_IMAGE_MAX_EDGE,
+                SOCIAL_IMAGE_MAX_EDGE,
+                FillType.Fit,
+                absoluteUri = true
+            )
+        }
+    }
+
+    if (card != null) {
+        property("og:image", card.href)
+        property("og:image:width", card.width.toString())
+        property("og:image:height", card.height.toString())
+        twitterProperty("twitter:image", card.href)
     }
 
     // twitter:card was never emitted, so X rendered no card at all -- not even
     // on articles that had an og:image. The big card needs an image that is
     // both wide and at least 300x157, which is what X requires for it; a
     // squarer one would be centre-cropped and a smaller one is rejected
-    // outright, so both fall back to the thumbnail card.
-    val fitsLargeCard = socialImage != null &&
-        socialImage.width >= 300 && socialImage.height >= 157 &&
-        socialImage.width.toDouble() / socialImage.height >= 1.5
+    // outright, so both fall back to the thumbnail card. Measured on the
+    // resized copy, since that is what actually gets served.
+    val fitsLargeCard = card != null &&
+        card.width >= 300 && card.height >= 157 &&
+        card.width.toDouble() / card.height >= 1.5
     twitterProperty("twitter:card", if (fitsLargeCard) "summary_large_image" else "summary")
 
 //    meta(content = "text/html;charset=utf-8") {
