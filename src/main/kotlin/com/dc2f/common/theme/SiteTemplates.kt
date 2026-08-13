@@ -21,6 +21,14 @@ private val logger = KotlinLogging.logger {}
  */
 private const val SOCIAL_IMAGE_MAX_EDGE = 1200
 
+/**
+ * The card format itself, 1.91:1, used when [BaseConfig.socialImageCrop] is on.
+ * These are the dimensions Open Graph documents for og:image, and what X
+ * renders `summary_large_image` at.
+ */
+private const val SOCIAL_CARD_WIDTH = 1200
+private const val SOCIAL_CARD_HEIGHT = 630
+
 interface BaseTemplateForTheme : ThemeMarker, ScaffoldTheme {
 
     open fun <T> baseTemplateNavBar(
@@ -316,11 +324,26 @@ fun HEAD.siteHead(context: RenderContext<*>, seo: PageSeo) {
     // already below the limit passes through untouched. Animated gifs keep the
     // original, same as in [ImageAsset.transform], and so does SVG -- neither
     // survives ImageIO, and the logo fallback below is frequently an SVG.
+    //
+    // With [BaseConfig.socialImageCrop] the copy is also cropped to the card's
+    // own 1.91:1, which takes the aspect-ratio question below out of the hands
+    // of whatever the author happened to upload. Only when the source is big
+    // enough to crop from: Cover would otherwise upscale a small image to fill
+    // the frame.
     val card = socialImage?.let { image ->
-        if (image.imageInfo.isAnimatedGif || image.imageInfo.isSvg) {
-            ResizedImage(image.href(context, absoluteUri = true), image.width, image.height)
-        } else {
-            image.resize(
+        val cropToCard = website.config.socialImageCrop == true &&
+            image.width >= SOCIAL_CARD_WIDTH && image.height >= SOCIAL_CARD_HEIGHT
+        when {
+            image.imageInfo.isAnimatedGif || image.imageInfo.isSvg ->
+                ResizedImage(image.href(context, absoluteUri = true), image.width, image.height)
+            cropToCard -> image.resize(
+                context,
+                SOCIAL_CARD_WIDTH,
+                SOCIAL_CARD_HEIGHT,
+                FillType.Cover,
+                absoluteUri = true
+            )
+            else -> image.resize(
                 context,
                 SOCIAL_IMAGE_MAX_EDGE,
                 SOCIAL_IMAGE_MAX_EDGE,

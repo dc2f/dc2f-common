@@ -79,6 +79,25 @@ interface BaseConfig : ContentDef {
      * SVG.
      */
     val socialImage: ImageAsset?
+
+    /**
+     * Crop the social card to 1.91:1 instead of preserving the source aspect
+     * ratio.
+     *
+     * The large card (`summary_large_image`) needs an image at least half again
+     * as wide as it is tall, so a source that is merely close to it -- 3:2
+     * photography sits at 1.5, and a generated image can land just under --
+     * silently degrades to the small thumbnail card. Cropping decides that
+     * question at build time rather than leaving it to the source material.
+     *
+     * The cost is that the card is no longer the whole image: roughly a fifth
+     * of the height is taken off centre. Worth it for photographic teasers,
+     * wrong for anything where the edges carry meaning, which is why this is
+     * opt-in per site rather than the default.
+     *
+     * Ignored for sources smaller than the card, which are never upscaled.
+     */
+    val socialImageCrop: Boolean?
 }
 
 interface NavBar : ContentDef {
