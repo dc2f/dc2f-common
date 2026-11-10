@@ -112,6 +112,15 @@ publishing {
     publications {
         create<MavenPublication>("mavenCentralJava") {
             from(components["java"])
+            // Central validates the POM without resolving BOMs, so every
+            // dependency has to carry its own version. The kotlin-bom platform
+            // moves them into dependencyManagement instead, which failed the
+            // first 0.3.0 deployment on kotlin-stdlib-jdk8, kotlin-reflect and
+            // the bom import. This writes the versions Gradle actually resolved.
+            versionMapping {
+                usage("java-api") { fromResolutionResult() }
+                usage("java-runtime") { fromResolutionResult() }
+            }
             artifact(tasks["sourcesJar"])
 //            artifact(sourcesJar.get())
             artifact(tasks["javadocJar"])
